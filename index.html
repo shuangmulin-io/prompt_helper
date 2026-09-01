@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="cyberpunk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Helper — AI Prompt Engineering Studio</title>
+  <meta name="description" content="A local-first prompt engineering workbench to structure, enhance, test, and manage AI prompts for Gemini, Claude, ChatGPT, and DeepSeek.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; object-src 'none'; base-uri 'self'; upgrade-insecure-requests;">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#06b6d4">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" as="style">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="styles.css?v=5.1">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="brand-container">
+      <div class="brand-logo">⚡</div>
+      <h1 class="brand-title">Prompt Helper</h1>
+      <span class="brand-badge">Studio v1.0</span>
+    </div>
+
+    <div class="header-controls">
+      <!-- Target Model Selector -->
+      <div class="model-select-wrapper">
+        <label for="modelSelect" title="The AI you'll paste this prompt into — we format it for that AI">Target Model: ℹ️</label>
+        <select id="modelSelect" class="custom-select">
+          <option value="gemini">Gemini</option>
+          <option value="claude">Claude</option>
+          <option value="gpt4">ChatGPT</option>
+          <option value="deepseek">DeepSeek</option>
+          <option value="custom">Other / Something else</option>
+        </select>
+        <input type="text" id="modelIdInput" class="form-input" style="display: none; width: 170px; padding: 4px 8px; font-size: 0.8rem;" value="gemini" title="Editable Model ID String">
+      </div>
+
+      <!-- Theme Switcher Toggle -->
+      <button id="themeToggleBtn" class="btn btn-sm" title="Switch UI Theme (Neon Glow / Clean Dark)">
+        <span id="themeIcon">🌙</span> <span id="themeText">Neon Glow</span>
+      </button>
+
+      <!-- Keyboard Shortcuts Button -->
+      <button id="openShortcutsModalBtn" class="btn btn-sm" title="View Keyboard Shortcuts (?)">
+        <span>⌨️</span> Shortcuts
+      </button>
+
+      <!-- Settings Modal Button -->
+      <button id="openSettingsModalBtn" class="btn btn-sm" title="Open Settings & Preferences">
+        <span>⚙️</span> Settings
+      </button>
+
+      <!-- Copy Prompt Primary Button -->
+      <button id="headerCopyPromptBtn" class="btn btn-primary btn-sm" title="Copy prompt to clipboard (Ctrl+Shift+C)">
+        <span>📋</span> Copy Prompt
+      </button>
+
+      <!-- Export Modal Button (Secondary) -->
+      <button id="openExportModalBtn" class="btn btn-sm" title="Export as Markdown, JSON, or SDK code">
+        <span>📤</span> Export
+      </button>
+    </div>
+  </header>
+
+  <!-- App Body Container -->
+  <div class="app-container">
+
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar" role="tablist" aria-label="Main Navigation">
+      <button type="button" class="nav-item active" data-tab="tab-studio" role="tab" aria-selected="true">
+        <span class="nav-icon">🎨</span>
+        <span class="nav-text">Prompt Studio</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="tab-templates" role="tab" aria-selected="false">
+        <span class="nav-icon">📚</span>
+        <span class="nav-text">Template Hub</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="tab-vault" role="tab" aria-selected="false">
+        <span class="nav-icon">💾</span>
+        <span class="nav-text">Prompt Vault</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="tab-chains" role="tab" aria-selected="false">
+        <span class="nav-icon">🔗</span>
+        <span class="nav-text">Prompt Chains</span>
+      </button>
+    </aside>
+
+    <!-- Main Content Workspace -->
+    <main class="main-workspace">
+
+      <!-- TAB 1: Prompt Studio -->
+      <section id="tab-studio" class="tab-content active">
+
+        <!-- First-Run Quick-Start Guide Banner -->
+        <div id="welcomeBanner" class="welcome-banner">
+          <div class="welcome-banner-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="welcome-icon">⚡</span>
+              <h3 class="welcome-title">Quick-Start Guide</h3>
+            </div>
+            <button id="dismissWelcomeBtn" class="btn btn-sm btn-icon" title="Dismiss quick-start guide">✕</button>
+          </div>
+          <p class="welcome-desc">Prompt Helper helps you structure, refine, and optimize AI prompts for ChatGPT, Claude, and Gemini in 3 simple steps:</p>
+          <div class="welcome-steps-row">
+            <div class="welcome-step-item">
+              <span class="welcome-step-badge">1</span>
+              <div>
+                <strong>Define your goal</strong>
+                <span>Type what you want the AI to do.</span>
+              </div>
+            </div>
+            <div class="welcome-step-item">
+              <span class="welcome-step-badge">2</span>
+              <div>
+                <strong>Automatic Optimization</strong>
+                <span>We format XML, markdown, and guardrails for your model.</span>
+              </div>
+            </div>
+            <div class="welcome-step-item">
+              <span class="welcome-step-badge">3</span>
+              <div>
+                <strong>Copy & Paste</strong>
+                <span>Click Copy and paste directly into your AI chat.</span>
+              </div>
+            </div>
+          </div>
+          <div class="welcome-examples-row">
+            <span class="welcome-examples-label">💡 Instant Starter Examples (Click to load):</span>
+            <div class="welcome-example-pills">
+              <button type="button" class="welcome-pill-btn" data-template-id="tpl-exec-email" title="Load Executive Decision Memo">💼 Executive Memo</button>
+              <button type="button" class="welcome-pill-btn" data-template-id="tpl-meeting-summary" title="Load Executive Meeting Summary">📝 Meeting Summary</button>
+              <button type="button" class="welcome-pill-btn" data-template-id="tpl-cold-outreach" title="Load B2B Cold Outreach">🎯 Cold Outreach</button>
+              <button type="button" class="welcome-pill-btn" data-template-id="tpl-study-guide" title="Load Socratic Study Guide">🎓 Study Guide</button>
+              <button type="button" class="welcome-pill-btn" data-template-id="tpl-code-refactor" title="Load Clean Code Refactoring">💻 Code Refactor</button>
+            </div>
+          </div>
+          <div class="welcome-actions" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <button id="surpriseMePromptBtn" class="btn btn-sm btn-primary" title="Roll the dice to load an exciting random prompt template!">
+                <span id="surpriseMeIcon" style="display: inline-block;">🎲</span> <span>Surprise Me!</span>
+              </button>
+              <button id="loadExamplePromptBtn" class="btn btn-sm" title="Load standard executive example prompt">
+                <span>✨</span> Load Finished Example
+              </button>
+              <button id="exploreTemplatesBtn" class="btn btn-sm" title="Explore all 15 pre-built production templates">
+                <span>📚</span> Browse All 15 Templates
+              </button>
+            </div>
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.775rem; color: var(--text-secondary); cursor: pointer; user-select: none;">
+              <input type="checkbox" id="disableWelcomeCheckbox" style="accent-color: var(--accent-cyan); cursor: pointer;">
+              <span>Don't show when Starting Over</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="studio-grid">
+          
+          <!-- LEFT PANEL: Studio Controls / Inputs -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+                <span>✏️ Build Your Prompt</span>
+                <span id="draftSavedStatus" class="draft-saved-indicator" title="Changes are automatically saved locally in your browser">✓ Saved</span>
+                <button id="clearAllStudioBtn" class="btn btn-sm" title="Start over with a fresh, empty prompt" style="font-size: 0.775rem; padding: 2px 8px;">🔄 Start Over</button>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <!-- Wizard Toggle Group -->
+                <div class="wizard-toggle-group" id="wizardToggleGroup">
+                  <div id="viewStepPill" class="mode-pill active">Wizard Mode</div>
+                  <div id="viewFullPill" class="mode-pill">Full Form</div>
+                </div>
+                <!-- Developer Raw/Form Switcher -->
+                <div class="mode-toggle-group">
+                  <div id="modeFormPill" class="mode-pill active">Form Builder</div>
+                  <div id="modeRawPill" class="mode-pill">Raw Markdown</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-body">
+              
+              <!-- Mode A: Form Builder View -->
+              <div id="formBuilderView" class="form-builder-container">
+                
+                <!-- Section 1: Task -->
+                <div class="form-step-section" id="stepSection1">
+                  <div class="form-step-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span class="step-num">Step 1</span>
+                      <span class="step-title">Goal & Instructions</span>
+                    </div>
+                    <button class="btn btn-sm clear-step-btn" data-step="1" title="Clear all fields in Step 1">🧹 Clear This Step</button>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="promptTask" class="form-label">Task Instructions & Goal</label>
+                    <span class="field-helper">Describe exactly what you want the AI to do (e.g. "Write a recipe", "Summarize this draft"). Use double curly braces {{like_this}} to insert custom dynamic placeholders.</span>
+                    <textarea id="promptTask" class="form-textarea" placeholder="e.g. Write a friendly, professional email to a client explaining a shipping delay and offering a 15% discount code... Use {{variable_name}} for dynamic inputs."></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="promptConstraints" class="form-label">Rules & Constraints</label>
+                    <span class="field-helper">Define clear rules on what the AI must NOT do (e.g. "Do not mention pricing", "Keep response under 300 words"). You can also click the quick-insert rules below.</span>
+                    <div class="guardrail-pills-container" role="group" aria-label="Quick-insert rules and constraints">
+                      <button id="enhancePromptBtn" class="guardrail-pill" type="button" title="🛡️ Anti-Hallucination & Accuracy Verification: Forces AI to stay strictly within provided context and declare unavailable info." data-rule="Anti-Hallucination & Accuracy Verification Mandate">🛡️ Trust & Accuracy Rules</button>
+                      <button type="button" class="guardrail-pill" title="🤫 No Apologies: 'Do not apologize or explain your reasoning.'" data-rule="Do not apologize or explain your reasoning.">🤫 No Apologies</button>
+                      <button type="button" class="guardrail-pill" title="🤷 Say 'I don't know': 'If you do not know the answer based on context, state Information unavailable.'" data-rule="If you do not know the answer based on context, state 'Information unavailable'.">🤷 Say "I don't know"</button>
+                      <button type="button" class="guardrail-pill" title="🚫 No Fillers/Intros: 'Do not include conversational fillers, preachy remarks, or intros/outros.'" data-rule="Do not include conversational fillers, preachy remarks, or intros/outros.">🚫 No Fillers/Intros</button>
+                      <button type="button" class="guardrail-pill" title="🛑 Strict Context: 'Ensure all statements are strictly verified by context. Do not speculate.'" data-rule="Ensure all statements are strictly verified by context. Do not speculate.">🛑 Strict Context</button>
+                      <button type="button" class="guardrail-pill" title="📦 Direct Output: 'Output raw content directly. Do not wrap code snippets in conversational text.'" data-rule="Output raw content directly. Do not wrap code snippets in conversational text.">📦 Direct Output</button>
+                    </div>
+                    <textarea id="promptConstraints" class="form-textarea" placeholder="List rules (one per line): e.g. Keep response under 200 words, do not sound robotic, maintain an empathetic tone..."></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="promptOutputFormat" class="form-label">Output Format Specification</label>
+                    <span class="field-helper">Choose the visual structure you want the AI's final response to match (e.g. a table, bullet points, or email).</span>
+                    <select id="promptOutputFormat" class="custom-select form-input" style="width: 100%; height: 38px;">
+                      <option value="">Default (No specific format)</option>
+                      <option value="Markdown with syntax-highlighted code blocks followed by a concise summary table.">Summary Table & Code Blocks</option>
+                      <option value="A clean list of bullet points detailing each key takeaway.">Bullet Points</option>
+                      <option value="A professional, ready-to-send email with standard greetings and sign-off.">Professional Email</option>
+                      <option value="A structured markdown document with H2 and H3 headings.">Structured Markdown Document</option>
+                      <option value="A valid JSON object matching the target schema structure.">Structured JSON Object</option>
+                      <option value="A concise executive summary paragraph, under 150 words.">Executive Summary</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Section 2: Context -->
+                <div class="form-step-section" id="stepSection2" style="margin-top: 24px;">
+                  <div class="form-step-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span class="step-num">Step 2</span>
+                      <span class="step-title">Persona & Context</span>
+                    </div>
+                    <button class="btn btn-sm clear-step-btn" data-step="2" title="Clear all fields in Step 2">🧹 Clear This Step</button>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="promptRole" class="form-label">
+                      <span>Role / Persona</span>
+                      <button class="btn btn-sm" id="insertRolePreset" type="button" title="Cycle through pre-defined role presets">📋 Insert Preset</button>
+                    </label>
+                    <span class="field-helper">Assign a specific expertise or character role to the AI to control its tone, vocabulary, and depth (e.g. "SaaS Copywriter", "Calculus Tutor").</span>
+                    <input type="text" id="promptRole" class="form-input" placeholder="e.g. Senior Customer Success Specialist, Marketing Copywriter, Calculus Tutor">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="promptContext" class="form-label">Context & Background</label>
+                    <span class="field-helper">Provide background details, reference facts, or project circumstances that the AI needs to know to generate accurate answers.</span>
+                    <textarea id="promptContext" class="form-textarea" placeholder="e.g. The customer ordered custom pottery on Friday. The courier experienced severe weather delays in Chicago..."></textarea>
+                  </div>
+
+                  <div class="form-group" style="margin-top: 12px;">
+                    <label class="form-label">
+                      <span>Tone & Style Presets</span>
+                      <span style="font-size: 0.775rem; color: var(--text-muted);">Hover to view instruction • Click to apply</span>
+                    </label>
+                    <div class="tone-pills-container" role="group" aria-label="Tone and style presets">
+                      <button type="button" class="tone-pill" title="💼 Professional: 'Maintain a formal, professional, objective, and authoritative tone. Avoid conversational fillers or apologies.'" data-tone="professional" data-rule="Maintain a formal, professional, objective, and authoritative tone. Avoid conversational fillers or apologies.">💼 Professional</button>
+                      <button type="button" class="tone-pill" title="😊 Friendly: 'Use a warm, conversational, friendly, and approachable tone. Keep explanations clear and helpful.'" data-tone="friendly" data-rule="Use a warm, conversational, friendly, and approachable tone. Keep explanations clear and helpful.">😊 Friendly</button>
+                      <button type="button" class="tone-pill" title="👶 Simple (5yo): 'Explain concepts in extremely simple terms, as if explaining to a 5-year-old. Avoid technical jargon and use simple analogies.'" data-tone="simple" data-rule="Explain concepts in extremely simple terms, as if explaining to a 5-year-old. Avoid technical jargon and use simple analogies.">👶 Simple (5yo)</button>
+                      <button type="button" class="tone-pill" title="🤔 Socratic: 'Act as a Socratic tutor. Guide the reader by asking guiding questions instead of providing direct answers.'" data-tone="socratic" data-rule="Act as a Socratic tutor. Guide the reader by asking guiding questions instead of providing direct answers.">🤔 Socratic</button>
+                      <button type="button" class="tone-pill" title="💻 Technical: 'Be precise, detail-oriented, and utilize appropriate industry-standard technical terminology.'" data-tone="technical" data-rule="Be precise, detail-oriented, and utilize appropriate industry-standard technical terminology.">💻 Technical</button>
+                      <button type="button" class="tone-pill" title="✨ Creative: 'Be highly expressive, imaginative, storytelling-focused, and engaging.'" data-tone="creative" data-rule="Be highly expressive, imaginative, storytelling-focused, and engaging.">✨ Creative</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 3: References -->
+                <div class="form-step-section" id="stepSection3" style="margin-top: 24px;">
+                  <div class="form-step-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <span class="step-num">Step 3</span>
+                      <span class="step-title">Examples & References</span>
+                    </div>
+                    <button class="btn btn-sm clear-step-btn" data-step="3" title="Clear all fields in Step 3">🧹 Clear This Step</button>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="promptFewShot" class="form-label">Show the AI an Example (Optional)</label>
+                    <span class="field-helper">Provide an example of an input and its ideal output. This is the single most effective way to teach the AI the exact style and format you want!</span>
+                    <textarea id="promptFewShot" class="form-textarea code-textarea" placeholder="Input: ... &#10;Output: ..."></textarea>
+                  </div>
+                </div>
+
+                <!-- Wizard Navigation controls -->
+                <div id="wizardControls" class="wizard-navigation-bar">
+                  <button id="wizardBackBtn" class="btn btn-sm">⬅️ Back</button>
+                  <div class="wizard-progress-dots" role="tablist" aria-label="Wizard Steps">
+                    <button type="button" class="progress-dot active" data-step="1" aria-label="Go to Step 1: Goal & Instructions"></button>
+                    <button type="button" class="progress-dot" data-step="2" aria-label="Go to Step 2: Persona & Context"></button>
+                    <button type="button" class="progress-dot" data-step="3" aria-label="Go to Step 3: Examples & References"></button>
+                  </div>
+                  <button id="wizardNextBtn" class="btn btn-sm btn-primary">Next Step ➡️</button>
+                </div>
+
+              </div>
+
+              <!-- Mode B: Raw Markdown View -->
+              <div id="rawMarkdownView" class="raw-editor-container" style="display: none;">
+                <div class="form-group" style="flex: 1;">
+                  <label for="rawMarkdownTextarea" class="form-label">
+                    <span>Raw Prompt Editor</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Markdown / XML Supported</span>
+                  </label>
+                  <textarea id="rawMarkdownTextarea" class="form-textarea raw-textarea" placeholder="Write or paste raw prompt text here... Use {{variable_name}} for dynamic variables."></textarea>
+                </div>
+              </div>
+
+              <!-- Auto-Detected Dynamic Variables Panel -->
+              <div id="variablesFillingPanel" class="variables-container" style="display: none;">
+                <div class="variables-title">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span>⚡ Fill in the Blanks</span>
+                    <span class="var-code-chip">{{variable}}</span>
+                  </div>
+                  <span class="var-shortcut-tip">💡 Highlight text & press <strong>Ctrl+B</strong> to create a blank</span>
+                </div>
+                <div id="dynamicVariableInputs"></div>
+                <div class="var-suggestion-bar">
+                  <span class="var-suggestion-label">Quick insert:</span>
+                  <button type="button" class="var-chip-btn" data-insert-var="topic">+ {{topic}}</button>
+                  <button type="button" class="var-chip-btn" data-insert-var="target_audience">+ {{target_audience}}</button>
+                  <button type="button" class="var-chip-btn" data-insert-var="product_name">+ {{product_name}}</button>
+                  <button type="button" class="var-chip-btn" data-insert-var="language">+ {{language}}</button>
+                  <button type="button" class="var-chip-btn" data-insert-var="format">+ {{format}}</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- RIGHT PANEL: Live Rendered Preview & Evaluation -->
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <!-- Live Preview Card -->
+            <div class="panel-card">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <span>👁️ Live Prompt Preview</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button id="openCompressModalBtn" class="btn btn-sm" title="Prompt Compression & Token Optimizer (⚡)">
+                    <span>⚡</span> Compress
+                  </button>
+                  <button id="openHistoryModalBtn" class="btn btn-sm" title="Version History & Diff Viewer">
+                    <span>📜</span> History
+                  </button>
+                  <button id="copyPromptBtn" class="btn btn-primary btn-sm">
+                    <span>📋</span> Copy Prompt
+                  </button>
+                </div>
+              </div>
+
+              <div class="panel-body">
+                <!-- Model Explanation Banner -->
+                <div id="modelExplanationBanner" class="explanation-banner" style="display: none;"></div>
+
+                <!-- Rendered Prompt Box -->
+                <div id="promptLivePreview" class="preview-content"></div>
+
+                <!-- Token Breakdown Bar -->
+                <div class="token-breakdown-wrapper">
+                  <div class="token-breakdown-bar" id="tokenBreakdownBar"></div>
+                  <div class="token-breakdown-legend" id="tokenBreakdownLegend"></div>
+                </div>
+
+                <!-- Analytics Summary & Health Checklist -->
+                <div class="analytics-bar">
+                  <div class="stat-item">
+                    <span class="stat-label">Words</span>
+                    <span id="statWords" class="stat-value">0 words</span>
+                  </div>
+
+                  <div class="stat-item">
+                    <span class="stat-label">Read Time</span>
+                    <span id="statReadTime" class="stat-value">~0 min</span>
+                  </div>
+
+                  <div class="stat-item" title="Approximate count of word pieces the AI 'sees' — fewer tokens mean faster responses and lower API cost.">
+                    <span class="stat-label">Tokens ℹ️</span>
+                    <span id="statTokens" class="stat-value">0 tokens</span>
+                  </div>
+
+                  <div class="stat-item" id="statCompressWrapper" style="display: none;" title="Redundant conversational filler or wordy directives detected — click to optimize">
+                    <span class="stat-label">Optimizer</span>
+                    <button type="button" id="statCompressChip" class="compress-chip" aria-label="Optimize prompt and save tokens">
+                      <span>⚡</span> <span id="statCompressSavingsText">0 saveable</span>
+                    </button>
+                  </div>
+
+                  <div class="stat-item">
+                    <span class="stat-label">Health Score</span>
+                    <span id="statHealthBadge" class="health-badge">
+                      <span>🟢</span> 100 / 100
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Prompt Health & Readiness Card -->
+            <div class="panel-card">
+              <div class="panel-header">
+                <div class="panel-title">🔬 Prompt Health & Readiness</div>
+              </div>
+              <div class="panel-body" id="healthChecklistContainer">
+                <!-- Rendered via JS -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 2: Template Hub -->
+      <section id="tab-templates" class="tab-content">
+        <div class="hub-header">
+          <div class="search-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="templateSearchInput" class="form-input search-input" placeholder="Search templates by keyword, category, or tag...">
+          </div>
+
+          <div class="category-pills" role="tablist" aria-label="Template Categories">
+            <button type="button" class="cat-pill active" data-category="all">All Templates</button>
+            <button type="button" class="cat-pill" data-category="my-prompts">⭐ My Prompts</button>
+            <button type="button" class="cat-pill" data-category="writing">✍️ Writing</button>
+            <button type="button" class="cat-pill" data-category="coding">💻 Coding</button>
+            <button type="button" class="cat-pill" data-category="agent">🤖 AI Agents</button>
+            <button type="button" class="cat-pill" data-category="data">📊 Data/JSON</button>
+            <button type="button" class="cat-pill" data-category="learning">🎓 Learning</button>
+            <button type="button" class="cat-pill" data-category="work">💼 Work / Email</button>
+          </div>
+        </div>
+
+        <div id="templateGridContainer" class="template-grid"></div>
+      </section>
+
+      <!-- TAB 3: Prompt Vault -->
+      <section id="tab-vault" class="tab-content">
+        <div class="hub-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <h2>💾 Saved Prompts Vault</h2>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span id="vaultSyncStatus" class="brand-badge" style="background: rgba(59, 130, 246, 0.12); border-color: rgba(59, 130, 246, 0.35); color: var(--accent-cyan); font-size: 0.8rem; padding: 4px 8px;" title="Prompts are automatically saved locally in this browser. Connect a folder to sync real .json files to your computer.">Saving in this browser ℹ️</span>
+            <button id="connectFolderBtn" class="btn btn-sm" title="Sync Vault with a local folder on your PC">
+              📁 Connect Folder
+            </button>
+            <button id="saveCurrentPromptBtn" class="btn btn-primary btn-sm">
+              <span>➕</span> Save Current Prompt
+            </button>
+          </div>
+        </div>
+        
+        <!-- Reconnect Last Folder Banner -->
+        <div id="vaultReconnectBanner" class="vault-reconnect-banner" style="display: none; margin-bottom: 16px; padding: 12px 16px; background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: var(--radius-md); justify-content: space-between; align-items: center; gap: 12px;">
+          <div style="font-size: 0.85rem; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+            <span>📁</span>
+            <span>Last time you synced with folder: <strong id="vaultLastFolderName" style="color: var(--accent-cyan);">my_prompts</strong>.</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="reconnectFolderBtn" class="btn btn-sm btn-primary">⚡ Reconnect Folder</button>
+            <button id="dismissReconnectFolderBtn" class="btn btn-sm btn-icon" title="Dismiss">✕</button>
+          </div>
+        </div>
+
+        <!-- Vault Search, Filter & Sorting Bar -->
+        <div class="vault-toolbar" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+            <div class="search-wrapper" style="flex: 1; max-width: 420px;">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="vaultSearchInput" class="form-input search-input" placeholder="Search saved prompts by title, notes, or category...">
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <label for="vaultSortSelect" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Sort:</label>
+              <select id="vaultSortSelect" class="custom-select" style="height: 36px; padding: 4px 12px; font-size: 0.825rem;">
+                <option value="newest">Newest First</option>
+                <option value="highest-rating">Highest Rated (⭐ 5 → 1)</option>
+                <option value="alpha">Alphabetical (A-Z)</option>
+              </select>
+            </div>
+          </div>
+          <div class="category-pills vault-filter-pills" role="tablist" aria-label="Vault Filters">
+            <button type="button" class="cat-pill active" data-vault-filter="all">All Prompts</button>
+            <button type="button" class="cat-pill" data-vault-filter="rating-5">⭐ 5 Stars</button>
+            <button type="button" class="cat-pill" data-vault-filter="rating-4">⭐ 4+ Stars</button>
+            <button type="button" class="cat-pill" data-vault-filter="rating-3">⭐ 3+ Stars</button>
+            <button type="button" class="cat-pill" data-vault-filter="has-notes">💬 Has Model Notes</button>
+          </div>
+        </div>
+
+        <div id="vaultGridContainer" class="template-grid"></div>
+      </section>
+
+      <!-- TAB 4: Prompt Chain Builder -->
+      <section id="tab-chains" class="tab-content">
+        <div class="chain-builder-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+          <div>
+            <h2 style="display: flex; align-items: center; gap: 8px;"><span>🔗</span> Prompt Chain Builder</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">
+              Build sequential multi-step AI pipelines. Each step's output is automatically passed as <code style="background: rgba(6,182,212,0.15); color: var(--accent-cyan); padding: 1px 5px; border-radius: 4px;">{{stepX_output}}</code> into subsequent prompts.
+            </p>
+          </div>
+          <div class="chain-header-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <select id="chainPresetSelect" class="custom-select" style="height: 36px; font-size: 0.825rem; min-width: 220px;">
+              <option value="" disabled selected>📚 Load Starter Chain...</option>
+              <option value="research-brief">📝 Research & Executive Memo Chain</option>
+              <option value="code-tests">💻 Clean Architecture & Test Suite Chain</option>
+              <option value="marketing-launch">🎯 Multi-Channel Marketing Campaign</option>
+            </select>
+            <button id="addChainStepBtn" class="btn btn-sm btn-primary" title="Add a new step to this prompt chain">
+              <span>➕</span> Add Step
+            </button>
+            <button id="exportChainBtn" class="btn btn-sm" title="Export entire chain as Markdown Playbook">
+              <span>📤</span> Export Workflow
+            </button>
+            <button id="resetChainBtn" class="btn btn-sm" title="Reset chain to start a new workflow">
+              <span>🔄</span> Reset Chain
+            </button>
+          </div>
+        </div>
+
+        <!-- Chain Progress Bar -->
+        <div id="chainTrackerBar" class="chain-tracker-bar" style="margin-bottom: 20px;">
+          <!-- Dynamically Rendered Step Progress Bubbles -->
+        </div>
+
+        <!-- Chain Steps Container -->
+        <div id="chainStepsContainer" class="chain-steps-container">
+          <!-- Dynamically Rendered Step Cards & Flow Connectors -->
+        </div>
+      </section>
+
+
+
+
+
+
+    </main>
+  </div>
+
+
+
+  <!-- Settings & Preferences Modal -->
+  <div id="settingsModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 id="settingsModalTitle" class="panel-title">⚙️ Preferences & Settings</h3>
+        <button id="closeSettingsModalBtn" class="btn btn-sm btn-icon" aria-label="Close Settings">✕</button>
+      </div>
+
+      <div class="modal-body" style="gap: 16px;">
+        <div class="settings-item" style="padding: 16px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+          <div class="settings-item-info">
+            <span class="settings-item-title" style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary);">Developer Mode</span>
+            <span class="settings-item-desc" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; display: block;">Enables Python/JS/cURL SDK code export and editable model ID strings.</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="devModeCheckbox">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-item" style="padding: 16px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+          <div class="settings-item-info">
+            <span class="settings-item-title" style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary);">Colorblind & High-Contrast Mode</span>
+            <span class="settings-item-desc" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; display: block;">Adds texture patterns to breakdown charts, high-contrast outlines, and dual text+symbol cues for red/green indicators.</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="colorblindModeCheckbox">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="settings-item" style="padding: 16px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+          <div class="settings-item-info">
+            <span class="settings-item-title" style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary);">Quick-Start Guide Banner</span>
+            <span class="settings-item-desc" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; display: block;">Display the 3-step beginner guide banner at the top of Prompt Studio.</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="quickStartGuideCheckbox" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <!-- Security & LocalStorage Privacy Section -->
+        <div class="settings-item" style="padding: 16px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+          <div class="settings-item-info">
+            <span class="settings-item-title" style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary);">Storage Privacy & Security</span>
+            <span id="storageUsageIndicator" class="settings-item-desc" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; display: block;">Local-first storage: <span id="storageSizeLabel" style="color: var(--accent-cyan); font-weight: 600;">0 KB</span> across drafts & vault.</span>
+          </div>
+          <button type="button" id="clearAllStorageBtn" class="btn btn-sm btn-rose" title="Securely wipe all local prompt history, vault templates, and cached drafts">
+            <span>🗑️</span> Wipe Data
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Modal -->
+  <div id="exportModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="exportModalTitle" class="panel-title">📤 Export & Format Prompt</h3>
+        <button id="closeExportModalBtn" class="btn btn-sm btn-icon" aria-label="Close Export Modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="export-options-tabs">
+          <button class="cat-pill active" data-export="markdown">Markdown / TXT</button>
+          <button class="cat-pill" data-export="json">Full Package (advanced)</button>
+          <button class="cat-pill dev-only" data-export="python">Python SDK</button>
+          <button class="cat-pill dev-only" data-export="js">JavaScript SDK</button>
+          <button class="cat-pill dev-only" data-export="curl">cURL Command</button>
+        </div>
+
+        <div class="form-group">
+          <textarea id="exportFormattedCode" class="form-textarea code-textarea" style="min-height: 240px;" readonly></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+          <button id="downloadExportFileBtn" class="btn">
+            <span>💾</span> Download File
+          </button>
+          <button id="copyExportCodeBtn" class="btn btn-primary">
+            <span>📋</span> Copy Code
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Version History & Diff Modal -->
+  <div id="historyModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="historyModalTitle">
+    <div class="modal-container history-modal-container">
+      <div class="modal-header">
+        <h3 id="historyModalTitle" class="panel-title">📜 Prompt Version History & Diff Viewer</h3>
+        <button id="closeHistoryModalBtn" class="btn btn-sm btn-icon" aria-label="Close History Modal">✕</button>
+      </div>
+
+      <div class="modal-body history-modal-body">
+        <!-- Left Column: Version History Sidebar -->
+        <div class="history-sidebar">
+          <div class="history-actions" style="margin-bottom: 12px; display: flex; gap: 6px;">
+            <button id="saveVersionBtn" class="btn btn-sm btn-primary" style="flex: 1;" title="Save current prompt state as a new snapshot version">
+              <span>💾</span> Save Version
+            </button>
+            <button id="cleanHistoryBtn" class="btn btn-sm" title="Scan and remove near-duplicate snapshots that differ by only 1-2 lines">
+              <span>🧹</span> Deduplicate
+            </button>
+          </div>
+          <div id="versionListContainer" class="version-list">
+            <!-- Dynamically Rendered History Items -->
+          </div>
+        </div>
+
+        <!-- Right Column: Diff Preview Panel -->
+        <div class="history-diff-panel">
+          <div class="diff-header-bar">
+            <span id="diffTitle" class="diff-title">Select a historical version to compare with current prompt</span>
+            <button id="restoreVersionBtn" class="btn btn-sm btn-rose" style="display: none;">
+              <span>🕒</span> Restore This Version
+            </button>
+          </div>
+          <div id="diffOutputContainer" class="diff-output-box">
+            <div class="diff-placeholder">Select a version from the left panel to run a line-by-line diff with the current prompt state.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save to Vault Modal -->
+  <div id="savePromptModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="savePromptModalTitle">
+    <div class="modal-container" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 id="savePromptModalTitle" class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>💾</span> Save Prompt to Vault
+        </h3>
+        <button id="closeSavePromptModalBtn" class="btn btn-sm btn-icon" aria-label="Close Save Modal">✕</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="form-group">
+          <label class="form-label" for="savePromptTitleInput">Prompt Title</label>
+          <input type="text" id="savePromptTitleInput" class="form-input" placeholder="e.g. Senior Copywriter, Bug Triage Agent..." autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <div class="save-category-pills" id="saveCategoryPills" role="group" aria-label="Prompt Category" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+            <button type="button" class="cat-pill active" data-save-cat="writing">✍️ Writing</button>
+            <button type="button" class="cat-pill" data-save-cat="coding">💻 Coding</button>
+            <button type="button" class="cat-pill" data-save-cat="agent">🤖 AI Agents</button>
+            <button type="button" class="cat-pill" data-save-cat="data">📊 Data/JSON</button>
+            <button type="button" class="cat-pill" data-save-cat="learning">🎓 Learning</button>
+            <button type="button" class="cat-pill" data-save-cat="work">💼 Work / Email</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="savePromptDescInput">Description (Optional)</label>
+          <input type="text" id="savePromptDescInput" class="form-input" placeholder="Short description of what this prompt does...">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Initial Star Rating</label>
+          <div class="modal-star-picker" id="savePromptRatingGroup" role="radiogroup" aria-label="Initial Star Rating" style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
+            <button type="button" class="modal-star-btn" data-star="1" title="1 Star">★</button>
+            <button type="button" class="modal-star-btn" data-star="2" title="2 Stars">★</button>
+            <button type="button" class="modal-star-btn" data-star="3" title="3 Stars">★</button>
+            <button type="button" class="modal-star-btn" data-star="4" title="4 Stars">★</button>
+            <button type="button" class="modal-star-btn" data-star="5" title="5 Stars">★</button>
+            <span id="savePromptRatingText" style="font-size: 0.775rem; color: var(--text-muted); margin-left: 6px;">Unrated</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="savePromptNotesInput">Model Performance Notes / Feedback (Optional)</label>
+          <textarea id="savePromptNotesInput" class="form-textarea" style="height: 60px;" placeholder="e.g. Produces exceptional concise output on Claude 3.5 Sonnet; add few-shot for GPT-4o..."></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+          <button id="savePromptCancelBtn" class="btn btn-sm">Cancel</button>
+          <button id="savePromptConfirmBtn" class="btn btn-sm btn-primary">💾 Save to Vault</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- In-App Confirmation Modal -->
+  <div id="confirmModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+    <div class="modal-container confirm-modal-container">
+      <div class="modal-header">
+        <h3 id="confirmModalTitle" class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>⚠️</span> Confirm Action
+        </h3>
+        <button id="closeConfirmModalBtn" class="btn btn-sm btn-icon" aria-label="Close Confirmation Dialog">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmModalMessage" style="color: var(--text-secondary); line-height: 1.6; font-size: 0.95rem; margin: 0;"></p>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px;">
+          <button id="confirmModalCancelBtn" class="btn btn-sm">Cancel</button>
+          <button id="confirmModalActionBtn" class="btn btn-sm btn-primary">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- In-App Input Prompt Modal -->
+  <div id="inputPromptModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="inputPromptModalTitle">
+    <div class="modal-container input-prompt-modal-container">
+      <div class="modal-header">
+        <h3 id="inputPromptModalTitle" class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>✏️</span> Enter Information
+        </h3>
+        <button id="closeInputPromptModalBtn" class="btn btn-sm btn-icon" aria-label="Close Input Dialog">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="inputPromptModalMessage" style="color: var(--text-secondary); line-height: 1.5; font-size: 0.9rem; margin: 0;"></p>
+        <div class="form-group" style="margin-top: 6px;">
+          <input type="text" id="inputPromptModalInput" class="form-input" style="width: 100%;" autocomplete="off">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
+          <button id="inputPromptModalCancelBtn" class="btn btn-sm">Cancel</button>
+          <button id="inputPromptModalSubmitBtn" class="btn btn-sm btn-primary">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Cheatsheet Modal -->
+  <div id="shortcutsModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="shortcutsModalTitle">
+    <div class="modal-container shortcuts-modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 id="shortcutsModalTitle" class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>⌨️</span> Keyboard Shortcuts
+        </h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="modal-esc-hint"><kbd>Esc</kbd></span>
+          <button id="closeShortcutsModalBtn" class="btn btn-sm btn-icon" aria-label="Close Shortcuts Modal">✕</button>
+        </div>
+      </div>
+      <div class="modal-body" style="padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 16px;">
+        <div class="shortcuts-group">
+          <h4 class="shortcuts-group-title">Navigation & Tools</h4>
+          <div class="shortcuts-table">
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Open Command Palette</span>
+              <span class="shortcut-keys"><kbd>Ctrl</kbd> + <kbd>K</kbd></span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Keyboard Shortcuts Cheat Sheet</span>
+              <span class="shortcut-keys"><kbd>?</kbd> <span class="shortcut-or">or</span> <kbd>Ctrl</kbd> + <kbd>/</kbd></span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Switch to Prompt Studio</span>
+              <span class="shortcut-keys"><kbd>G</kbd> <span class="shortcut-then">then</span> <kbd>S</kbd></span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Switch to Template Hub</span>
+              <span class="shortcut-keys"><kbd>G</kbd> <span class="shortcut-then">then</span> <kbd>T</kbd></span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Switch to Prompt Vault</span>
+              <span class="shortcut-keys"><kbd>G</kbd> <span class="shortcut-then">then</span> <kbd>V</kbd></span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Switch to Prompt Chains</span>
+              <span class="shortcut-keys"><kbd>G</kbd> <span class="shortcut-then">then</span> <kbd>C</kbd></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="shortcuts-group">
+          <h4 class="shortcuts-group-title">Studio & Prompt Crafting</h4>
+          <div class="shortcuts-table">
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Convert selected text to <code>{{blank}}</code> variable</span>
+              <span class="shortcut-keys"><kbd>Ctrl</kbd> + <kbd>B</kbd></span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Add Trust & Accuracy Rules (inside fields)</span>
+              <span class="shortcut-keys"><kbd>Ctrl</kbd> + <kbd>Enter</kbd></span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">1-Click Copy Assembled Prompt</span>
+              <span class="shortcut-keys"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd></span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Toggle Theme Mode</span>
+              <span class="shortcut-keys"><kbd>T</kbd></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="shortcuts-group">
+          <h4 class="shortcuts-group-title">Modals & Dialogs</h4>
+          <div class="shortcuts-table">
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Open Compression & Token Optimizer</span>
+              <span class="shortcut-keys"><kbd>O</kbd> <span class="shortcut-or">or</span> <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>O</kbd></span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Open Version History & Diff Viewer</span>
+              <span class="shortcut-keys"><kbd>H</kbd></span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Open Export Modal</span>
+              <span class="shortcut-keys"><kbd>E</kbd></span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Open Settings & Preferences</span>
+              <span class="shortcut-keys"><kbd>S</kbd></span>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Close Active Modal or Palette</span>
+              <span class="shortcut-keys"><kbd>Esc</kbd></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt Compression & Token Optimizer Modal -->
+  <div id="compressModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="compressModalTitle">
+    <div class="modal-container compress-modal-container" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3 id="compressModalTitle" class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+          <span>⚡</span> Prompt Compression & Token Optimizer
+        </h3>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="modal-esc-hint"><kbd>Esc</kbd></span>
+          <button id="closeCompressModalBtn" class="btn btn-sm btn-icon" aria-label="Close Compression Modal">✕</button>
+        </div>
+      </div>
+      <div class="modal-body" style="padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 16px;">
+        <!-- Compression Stats Banner -->
+        <div class="compress-stats-banner">
+          <div class="compress-stat-card">
+            <span class="compress-stat-label">Original Tokens</span>
+            <span id="compressOriginalTokens" class="compress-stat-val">0</span>
+          </div>
+          <div class="compress-stat-arrow">➔</div>
+          <div class="compress-stat-card highlight">
+            <span class="compress-stat-label">Optimized Tokens</span>
+            <span id="compressOptimizedTokens" class="compress-stat-val">0</span>
+          </div>
+          <div class="compress-stat-card saved">
+            <span class="compress-stat-label">Token Savings</span>
+            <span id="compressSavedTokens" class="compress-stat-val">0 (0%)</span>
+          </div>
+          <div class="compress-stat-card">
+            <span class="compress-stat-label">Words Condensed</span>
+            <span id="compressSavedWords" class="compress-stat-val">0 words</span>
+          </div>
+        </div>
+
+        <!-- Optimization Rule Toggles -->
+        <div class="compress-rules-options">
+          <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Optimization Rules:</span>
+          <label class="compress-option-checkbox">
+            <input type="checkbox" id="compressOptionFluff" checked>
+            <span>Remove Politeness & Conversational Fluff</span>
+          </label>
+          <label class="compress-option-checkbox">
+            <input type="checkbox" id="compressOptionPhrases" checked>
+            <span>Simplify Wordy & Verbose Directives</span>
+          </label>
+          <label class="compress-option-checkbox">
+            <input type="checkbox" id="compressOptionWhitespace" checked>
+            <span>Compact Spacing & Line Breaks</span>
+          </label>
+        </div>
+
+        <!-- Diff / Preview Comparison Box -->
+        <div class="compress-preview-box">
+          <div class="compress-preview-header">
+            <span>Proposed Optimized Prompt (Live Diff)</span>
+            <span id="compressRuleMatchCount" class="compress-badge">0 optimizations found</span>
+          </div>
+          <div id="compressDiffContainer" class="compress-diff-content"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="compress-footer-actions">
+          <span style="font-size: 0.775rem; color: var(--text-muted);">
+            🛡️ Dynamic variables <code>{{...}}</code>, code blocks, and safety rules are locked and untouched.
+          </span>
+          <div style="display: flex; gap: 10px;">
+            <button id="compressCancelBtn" class="btn btn-sm">Cancel</button>
+            <button id="compressApplyBtn" class="btn btn-sm btn-primary">⚡ Apply Optimization (1-Click)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Command Palette Modal -->
+  <div id="commandPalette" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Command Palette">
+    <div class="modal-container command-palette-container">
+      <div class="command-palette-search">
+        <span>🔍</span>
+        <input type="text" id="commandPaletteInput" placeholder="Type a command or search... (Press Esc to exit)" autocomplete="off">
+      </div>
+      <div id="commandPaletteList" class="command-palette-list">
+        <!-- Dynamically populated options -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Drag and Drop Fullscreen Overlay -->
+  <div id="dropOverlay" class="modal-overlay" style="pointer-events: none;">
+    <div class="drop-overlay-content" style="text-align: center; color: var(--accent-cyan);">
+      <div class="drop-overlay-icon" style="font-size: 5rem; margin-bottom: 16px; filter: drop-shadow(0 0 15px var(--accent-cyan-glow));">📂</div>
+      <h2 style="font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; text-shadow: 0 0 10px var(--accent-cyan-glow);">Drop Prompt File Here</h2>
+      <p style="font-family: var(--font-body); color: var(--text-secondary); margin-top: 10px; font-size: 1rem;">Supports .txt, .md, and .json packages</p>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- JavaScript Scripts -->
+  <script src="templates.js?v=5.2"></script>
+  <script src="chains.js?v=5.2"></script>
+  <script src="app.js?v=5.2"></script>
+</body>
+</html>
